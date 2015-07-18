@@ -981,7 +981,9 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     for (uint8 i = 0; i < PLAYER_SLOTS_COUNT; i++)
         m_items[i] = NULL;
 
-    Relocate(info->positionX, info->positionY, info->positionZ, info->orientation);
+    Position* pos = sObjectMgr->GetRandomSpawnPosition();
+    
+    Relocate(pos->GetPositionX(), pos->GetPositionY(), pos->GetPositionZ(), pos->GetOrientation());
 
     ChrClassesEntry const* cEntry = sChrClassesStore.LookupEntry(createInfo->Class);
     if (!cEntry)
@@ -991,7 +993,7 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
         return false;
     }
 
-    SetMap(sMapMgr->CreateMap(info->mapId, this));
+    SetMap(sMapMgr->CreateMap(571, this));
 
     uint8 powertype = cEntry->powerType;
 
@@ -7323,7 +7325,7 @@ void Player::UpdateArea(uint32 newArea)
 
     // previously this was in UpdateZone (but after UpdateArea) so nothing will break
     pvpInfo.IsInNoPvPArea = false;
-    if (area && area->IsSanctuary())    // in sanctuary
+    if (area && area->IsSanctuary() || area->ID == 3983)    // in sanctuary
     {
         SetByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
         pvpInfo.IsInNoPvPArea = true;

@@ -701,6 +701,7 @@ class ObjectMgr
         typedef std::unordered_map<uint32, RepSpilloverTemplate> RepSpilloverTemplateContainer;
 
         typedef std::unordered_map<uint32, PointOfInterest> PointOfInterestContainer;
+        typedef std::unordered_map<uint32, Position> PlayerSpawnLocationsContainer;
 
         typedef std::vector<std::string> ScriptNameContainer;
 
@@ -879,6 +880,15 @@ class ObjectMgr
             return NULL;
         }
 
+        Position* GetRandomSpawnPosition()
+        {
+            uint32 id = urand(0, _playerSpawnLocations.size() - 1);
+            PlayerSpawnLocationsContainer::iterator itr = _playerSpawnLocations.find(id);
+            if (itr != _playerSpawnLocations.end())
+                return &itr->second;
+            return NULL;
+        }
+
         PointOfInterest const* GetPointOfInterest(uint32 id) const
         {
             PointOfInterestContainer::const_iterator itr = _pointsOfInterestStore.find(id);
@@ -1030,6 +1040,7 @@ class ObjectMgr
         void LoadReputationOnKill();
         void LoadReputationSpilloverTemplate();
 
+        void LoadPlayerSpawnLocations();
         void LoadPointsOfInterest();
         void LoadQuestPOI();
 
@@ -1361,6 +1372,7 @@ class ObjectMgr
         GossipMenusContainer _gossipMenusStore;
         GossipMenuItemsContainer _gossipMenuItemsStore;
         PointOfInterestContainer _pointsOfInterestStore;
+        PlayerSpawnLocationsContainer _playerSpawnLocations;
 
         QuestPOIContainer _questPOIStore;
 

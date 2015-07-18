@@ -1772,6 +1772,10 @@ void World::SetInitialWorldSettings()
     TC_LOG_INFO("server.loading", "Loading Calendar data...");
     sCalendarMgr->LoadFromDB();
 
+    TC_LOG_INFO("server.loading", "LOADING CUSTOM DATA:");
+    TC_LOG_INFO("server.loading", "Loading World Spawn Points");
+    sObjectMgr->LoadPlayerSpawnLocations();
+
     ///- Initialize game time and timers
     TC_LOG_INFO("server.loading", "Initialize game time and timers");
     m_gameTime = time(NULL);

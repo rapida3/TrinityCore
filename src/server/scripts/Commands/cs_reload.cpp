@@ -157,6 +157,7 @@ public:
             { "waypoint_data",                 rbac::RBAC_PERM_COMMAND_RELOAD_WAYPOINT_DATA,                    true,  &HandleReloadWpCommand,                         "", NULL },
             { "vehicle_accessory",             rbac::RBAC_PERM_COMMAND_RELOAD_VEHICLE_ACCESORY,                 true,  &HandleReloadVehicleAccessoryCommand,           "", NULL },
             { "vehicle_template_accessory",    rbac::RBAC_PERM_COMMAND_RELOAD_VEHICLE_TEMPLATE_ACCESSORY,       true,  &HandleReloadVehicleTemplateAccessoryCommand,   "", NULL },
+            { "hcl_spawn_locs",                rbac::RBAC_PERM_COMMAND_RELOAD_HCL_SPAWN_LOCS,                   true,  &HandleReloadSpawnLocationsCommand,             "", NULL },
             { NULL,                            0,                                                               false, NULL,                                           "", NULL }
         };
         static ChatCommand commandTable[] =
@@ -700,6 +701,15 @@ public:
         handler->SendGlobalGMSysMessage("DB table `points_of_interest` reloaded.");
         return true;
     }
+
+    static bool HandleReloadSpawnLocationsCommand(ChatHandler* handler, const char* /*args*/)
+    {
+        TC_LOG_INFO("misc", "Re-Loading `hcl_spawn_locs` Table!");
+        sObjectMgr->LoadPlayerSpawnLocations();
+        handler->SendGlobalGMSysMessage("DB table `hcl_spawn_locs` reloaded.");
+        return true;
+    }
+
 
     static bool HandleReloadQuestPOICommand(ChatHandler* handler, const char* /*args*/)
     {

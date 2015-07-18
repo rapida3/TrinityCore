@@ -7199,6 +7199,50 @@ void ObjectMgr::LoadReputationSpilloverTemplate()
     TC_LOG_INFO("server.loading", ">> Loaded %u reputation_spillover_template in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
 }
 
+void ObjectMgr::LoadPlayerSpawnLocations()
+{
+    uint32 oldMSTime = getMSTime();
+
+    _playerSpawnLocations.clear();
+
+    uint32 count = 0;
+
+    QueryResult result = CharacterDatabase.Query("SELECT ID, x, y, z, o FROM hcl_spawn_loc");
+    if (!result)
+    {
+        TC_LOG_ERROR("server_loading", ">> Loaded 0 World Spawn Locations, DB table `hcl_spawn_loc` is empty");
+        return;
+    }
+
+    do
+    {
+        Field* fields = result->Fetch();
+        uint32 spawn_id = fields[0].GetUInt32();
+
+        float x = fields[1].GetFloat();
+        float y = fields[2].GetFloat();
+        float z = fields[3].GetFloat();
+        float o = fields[4].GetFloat();
+
+        
+        
+        if (!Trinity::IsValidMapCoord(x,y,z,o))
+        {
+            TC_LOG_ERROR("sql.sql", "Table `hcl_spawn_loc` (Entry: %u) have invalid coordinates (X: %f Y: %f Z: %f O: %f), ignored.", spawn_id, x, y, z, o);
+            continue;
+        }
+
+        Position pos(fields[1].GetFloat(), fields[2].GetFloat(), fields[3].GetFloat(), fields[4].GetFloat());
+
+        _playerSpawnLocations[spawn_id] = pos;
+
+        ++count;
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded %u World Spawn Location definitions in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
+    
+}
+
 void ObjectMgr::LoadPointsOfInterest()
 {
     uint32 oldMSTime = getMSTime();

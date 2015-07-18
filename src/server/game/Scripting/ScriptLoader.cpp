@@ -94,7 +94,7 @@ void AddSC_achievement_scripts();
 void AddSC_action_ip_logger();
 
 //eastern kingdoms
-void AddSC_alterac_valley();                 //Alterac Valley
+/*void AddSC_alterac_valley();                 //Alterac Valley
 void AddSC_boss_balinda();
 void AddSC_boss_drekthar();
 void AddSC_boss_galvangar();
@@ -663,7 +663,7 @@ void AddSC_shadowmoon_valley();
 void AddSC_shattrath_city();
 void AddSC_terokkar_forest();
 void AddSC_zangarmarsh();
-
+*/
 // Events
 void AddSC_event_childrens_week();
 
@@ -796,7 +796,7 @@ void AddWorldScripts()
 void AddEasternKingdomsScripts()
 {
 #ifdef SCRIPTS
-    AddSC_alterac_valley();                 //Alterac Valley
+   /* AddSC_alterac_valley();                 //Alterac Valley
     AddSC_boss_balinda();
     AddSC_boss_drekthar();
     AddSC_boss_galvangar();
@@ -974,12 +974,14 @@ void AddEasternKingdomsScripts()
     AddSC_undercity();
     AddSC_western_plaguelands();
     AddSC_wetlands();
+    */
 #endif
 }
 
 void AddKalimdorScripts()
 {
 #ifdef SCRIPTS
+    /*
     AddSC_blackfathom_deeps();              //Blackfathom Depths
     AddSC_boss_gelihast();
     AddSC_boss_kelris();
@@ -1072,12 +1074,14 @@ void AddKalimdorScripts()
     AddSC_thunder_bluff();
     AddSC_ungoro_crater();
     AddSC_winterspring();
+    */
 #endif
 }
 
 void AddOutlandScripts()
 {
 #ifdef SCRIPTS
+    /*
     // Auchindoun - Auchenai Crypts
     AddSC_boss_shirrak_the_dead_watcher();
     AddSC_boss_exarch_maladaar();
@@ -1194,13 +1198,14 @@ void AddOutlandScripts()
     AddSC_shattrath_city();
     AddSC_terokkar_forest();
     AddSC_zangarmarsh();
+    */
 #endif
 }
 
 void AddNorthrendScripts()
 {
 #ifdef SCRIPTS
-    AddSC_boss_slad_ran();               //Gundrak
+   /* AddSC_boss_slad_ran();               //Gundrak
     AddSC_boss_moorabi();
     AddSC_boss_drakkari_colossus();
     AddSC_boss_gal_darah();
@@ -1375,6 +1380,7 @@ void AddNorthrendScripts()
     AddSC_zuldrak();
     AddSC_crystalsong_forest();
     AddSC_isle_of_conquest();
+    */
 #endif
 }
 
