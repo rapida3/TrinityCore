@@ -1159,7 +1159,7 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
         addActionButton(action_itr->button, action_itr->action, action_itr->type);
 
     // original items
-    if (CharStartOutfitEntry const* oEntry = GetCharStartOutfitEntry(createInfo->Race, createInfo->Class, createInfo->Gender))
+    /*if (CharStartOutfitEntry const* oEntry = GetCharStartOutfitEntry(createInfo->Race, createInfo->Class, createInfo->Gender))
     {
         for (int j = 0; j < MAX_OUTFIT_ITEMS; ++j)
         {
@@ -1193,10 +1193,55 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
             }
             StoreNewItemInBestSlots(itemId, count);
         }
-    }
+    }*/
 
-    for (PlayerCreateInfoItems::const_iterator item_id_itr = info->item.begin(); item_id_itr != info->item.end(); ++item_id_itr)
-        StoreNewItemInBestSlots(item_id_itr->item_id, item_id_itr->item_amount);
+    PreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_START_ITEMS);
+    stmt->setUInt8(0, getClass());
+    PreparedQueryResult result = WorldDatabase.Query(stmt);
+
+    if (!result)
+        return true;
+    do
+    {
+        Field* fields = result->Fetch();
+        uint32 itemid = fields[0].GetUInt32();
+        uint32 enchantSpellId = fields[1].GetUInt32();
+        uint32 suffixid = fields[2].GetUInt32();
+
+        ItemTemplate const* itemp = sObjectMgr->GetItemTemplate(itemid);
+        ItemPosCountVec dest;
+        InventoryResult msg = CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemid, 1);
+        if (msg == EQUIP_ERR_OK)
+        {
+            int8 neg = 1;
+            if (itemp->RandomSuffix)
+                neg = -1;
+            Item* item = StoreNewItem(dest, itemid, true, suffixid*neg);
+            
+            if (enchantSpellId)
+            {
+                SpellEntry const* pSpell = sSpellStore.LookupEntry(enchantSpellId);
+                SpellItemEnchantmentEntry const* pEnchant = sSpellItemEnchantmentStore.LookupEntry(pSpell->EffectMiscValue[0]);
+                ApplyEnchantment(item, PERM_ENCHANTMENT_SLOT, false);
+                WorldPacket data(SMSG_ENCHANTMENTLOG, (8 + 8 + 4 + 4));     // last check 2.0.10
+                data << GetGUID().WriteAsPacked();
+                data << ObjectGuid::Empty.WriteAsPacked();
+                data << uint32(itemid);
+                data << uint32(pEnchant->ID);
+                SendMessageToSet(&data, true);
+                item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_ID_OFFSET, pEnchant->ID);
+                item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_DURATION_OFFSET, 0);
+                item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_CHARGES_OFFSET, 0);
+                item->SetState(ITEM_CHANGED, this);
+                ApplyEnchantment(item, PERM_ENCHANTMENT_SLOT, true);
+                TC_LOG_INFO("server.loading", "Item %u enchant id %u:%d", item->GetEntry(), pEnchant->ID, item->GetEnchantmentId(PERM_ENCHANTMENT_SLOT));                
+            }           
+        }
+    } while (result->NextRow());
+
+
+    //for (PlayerCreateInfoItems::const_iterator item_id_itr = info->item.begin(); item_id_itr != info->item.end(); ++item_id_itr)
+       // StoreNewItemInBestSlots(item_id_itr->item_id, item_id_itr->item_amount);
 
     // bags and main-hand weapon must equipped at this moment
     // now second pass for not equipped (offhand weapon/shield if it attempt equipped before main-hand weapon)
@@ -1232,6 +1277,8 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
         }
     }
     // all item positions resolved
+    
+   
 
     return true;
 }
@@ -14247,7 +14294,7 @@ void Player::PrepareGossipMenu(WorldObject* source, uint32 menuId /*= 0*/, bool 
                     break;
                 case GOSSIP_OPTION_VENDOR:
                 {
-                    VendorItemData const* vendorItems = creature->GetVendorItems();
+                    VendorItemData const* vendorItems = itr->second.ActionMenuId ? sObjectMgr->GetNpcVendorItemList(itr->second.ActionMenuId) : creature->GetVendorItems();
                     if (!vendorItems || vendorItems->Empty())
                     {
                         TC_LOG_ERROR("sql.sql", "Creature %s (Entry: %u GUID: %u DB GUID: %u) has UNIT_NPC_FLAG_VENDOR set but has an empty trading item list.", creature->GetName().c_str(), creature->GetEntry(), creature->GetGUIDLow(), creature->GetDBTableGUIDLow());
@@ -14458,7 +14505,7 @@ void Player::OnGossipSelect(WorldObject* source, uint32 gossipListId, uint32 men
             break;
         case GOSSIP_OPTION_VENDOR:
         case GOSSIP_OPTION_ARMORER:
-            GetSession()->SendListInventory(guid);
+            GetSession()->SendListInventory(guid, menuItemData->GossipActionMenuId);
             break;
         case GOSSIP_OPTION_STABLEPET:
             GetSession()->SendStablePet(guid);
@@ -21499,7 +21546,12 @@ bool Player::BuyItemFromVendorSlot(ObjectGuid vendorguid, uint32 vendorslot, uin
         return false;
     }
 
-    VendorItemData const* vItems = creature->GetVendorItems();
+    uint32 currentVendor = GetSession()->GetCurrentVendor();
+    if (currentVendor && vendorguid != PlayerTalkClass->GetGossipMenu().GetSenderGUID())
+         return false;
+    
+        
+        VendorItemData const* vItems = currentVendor ? sObjectMgr->GetNpcVendorItemList(currentVendor) : creature->GetVendorItems();
     if (!vItems || vItems->Empty())
     {
         SendBuyError(BUY_ERR_CANT_FIND_ITEM, creature, item, 0);
