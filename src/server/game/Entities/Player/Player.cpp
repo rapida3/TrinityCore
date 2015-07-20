@@ -1207,7 +1207,13 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
         uint32 itemid = fields[0].GetUInt32();
         uint32 enchantId = fields[1].GetUInt32();
         uint32 suffixid = fields[2].GetUInt32();
-
+        if (itemid == 44098) // insignia trinket
+        {
+            if (getRace() == RACE_HUMAN) // 2nd agm for humans
+                itemid = 19024;
+            else if (GetTeam() == HORDE)  // Change insignia faction   
+                itemid = 44097;
+        }
         ItemTemplate const* itemp = sObjectMgr->GetItemTemplate(itemid);
         ItemPosCountVec dest;
         InventoryResult msg = CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemid, 1);
@@ -1216,7 +1222,7 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
             int8 neg = 1;
             if (itemp->RandomSuffix)
                 neg = -1;
-            Item* item = StoreNewItem(dest, itemid, true, suffixid*neg);
+            Item* item = StoreNewItem(dest, itemid, true, suffixid*neg);            
             
             if (enchantId)
             {
