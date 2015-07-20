@@ -1205,7 +1205,7 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     {
         Field* fields = result->Fetch();
         uint32 itemid = fields[0].GetUInt32();
-        uint32 enchantSpellId = fields[1].GetUInt32();
+        uint32 enchantId = fields[1].GetUInt32();
         uint32 suffixid = fields[2].GetUInt32();
 
         ItemTemplate const* itemp = sObjectMgr->GetItemTemplate(itemid);
@@ -1218,23 +1218,20 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
                 neg = -1;
             Item* item = StoreNewItem(dest, itemid, true, suffixid*neg);
             
-            if (enchantSpellId)
+            if (enchantId)
             {
-                SpellEntry const* pSpell = sSpellStore.LookupEntry(enchantSpellId);
-                SpellItemEnchantmentEntry const* pEnchant = sSpellItemEnchantmentStore.LookupEntry(pSpell->EffectMiscValue[0]);
                 ApplyEnchantment(item, PERM_ENCHANTMENT_SLOT, false);
                 WorldPacket data(SMSG_ENCHANTMENTLOG, (8 + 8 + 4 + 4));     // last check 2.0.10
                 data << GetGUID().WriteAsPacked();
                 data << ObjectGuid::Empty.WriteAsPacked();
                 data << uint32(itemid);
-                data << uint32(pEnchant->ID);
+                data << uint32(enchantId);
                 SendMessageToSet(&data, true);
-                item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_ID_OFFSET, pEnchant->ID);
+                item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_ID_OFFSET, enchantId);
                 item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_DURATION_OFFSET, 0);
                 item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_CHARGES_OFFSET, 0);
                 item->SetState(ITEM_CHANGED, this);
                 ApplyEnchantment(item, PERM_ENCHANTMENT_SLOT, true);
-                TC_LOG_INFO("server.loading", "Item %u enchant id %u:%d", item->GetEntry(), pEnchant->ID, item->GetEnchantmentId(PERM_ENCHANTMENT_SLOT));                
             }           
         }
     } while (result->NextRow());
