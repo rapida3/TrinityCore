@@ -1222,7 +1222,8 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
             int8 neg = 1;
             if (itemp->RandomSuffix)
                 neg = -1;
-            Item* item = StoreNewItem(dest, itemid, true, suffixid*neg);            
+            Item* item = StoreNewItem(dest, itemid, true, suffixid*neg);
+
             
             if (enchantId)
             {
@@ -1238,7 +1239,33 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
                 item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_CHARGES_OFFSET, 0);
                 item->SetState(ITEM_CHANGED, this);
                 ApplyEnchantment(item, PERM_ENCHANTMENT_SLOT, true);
-            }           
+            }
+
+            if (itemid == 1482)
+            {
+                dest.clear();
+                msg = CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemid, 1);
+                if (msg == EQUIP_ERR_OK)
+                {
+                    item = StoreNewItem(dest, itemid, true, suffixid*neg);
+
+                    if (enchantId)
+                    {
+                        ApplyEnchantment(item, PERM_ENCHANTMENT_SLOT, false);
+                        WorldPacket data(SMSG_ENCHANTMENTLOG, (8 + 8 + 4 + 4));     // last check 2.0.10
+                        data << GetGUID().WriteAsPacked();
+                        data << ObjectGuid::Empty.WriteAsPacked();
+                        data << uint32(itemid);
+                        data << uint32(enchantId);
+                        SendMessageToSet(&data, true);
+                        item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_ID_OFFSET, enchantId);
+                        item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_DURATION_OFFSET, 0);
+                        item->SetUInt32Value(ITEM_FIELD_ENCHANTMENT_1_1 + PERM_ENCHANTMENT_SLOT*MAX_ENCHANTMENT_OFFSET + ENCHANTMENT_CHARGES_OFFSET, 0);
+                        item->SetState(ITEM_CHANGED, this);
+                        ApplyEnchantment(item, PERM_ENCHANTMENT_SLOT, true);
+                    }
+                }
+            }
         }
     } while (result->NextRow());
 
